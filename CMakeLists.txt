@@ -22,23 +22,20 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
-# add_executable(Hello src/hello.cpp)
-
-add_executable(LLVMHello src/llvm-hello.cpp)
-
-target_link_libraries(LLVMHello
+link_libraries(
+  # LLVMTarget
   # LLVMX86AsmParser # MC, MCParser, Support, X86Desc, X86Info
   # LLVMX86Desc # MC, Support, X86AsmPrinter, X86Info
   # LLVMX86AsmPrinter # MC, Support, X86Utils
   # LLVMX86Info # MC, Support, Target
   # LLVMX86Utils # Core, Support
+  # LVMX86CodeGen
   # LLVMipo
   # LLVMScalarOpts
   # LLVMInstCombine
   # LLVMTransformUtils
   # LLVMipa
   # LLVMAnalysis
-  # LLVMTarget
   # LLVMOption # Support
   # LLVMMCParser # MC, Support
   # LLVMMC # Object, Support
@@ -46,4 +43,10 @@ target_link_libraries(LLVMHello
   # LLVMBitReader # Core, Support
   LLVMCore # Support
   # LLVMSupport
+  # LLVMExecutionEngine
+  # LLVMInterpreter
+  # nativecodegen
 )
+
+
+add_executable(LLVMHello src/llvm-hello.cpp)

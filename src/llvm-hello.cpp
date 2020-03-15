@@ -1,12 +1,17 @@
+#include "llvm/ExecutionEngine/ExecutionEngine.h"
 #include "llvm/IR/CallingConv.h"
 #include "llvm/IR/DiagnosticPrinter.h"
 #include "llvm/IR/Function.h"
 #include "llvm/IR/IRBuilder.h"
+#include "llvm/IR/IRPrintingPasses.h"
 #include "llvm/IR/LegacyPassManager.h"
+#include "llvm/IR/Module.h"
+#include "llvm/IR/Type.h"
 #include "llvm/IR/Verifier.h"
+#include "llvm/Support/TargetSelect.h"
 #include "llvm/Support/raw_ostream.h"
-#include <llvm/IR/IRPrintingPasses.h>
-#include <llvm/IR/Module.h>
+
+#include <iostream>
 
 using namespace llvm;
 
@@ -100,9 +105,42 @@ Module *makeLLVMModuleMulAdd(Module *exitedMod = nullptr) {
 
   return mod;
 }
+
+Module *makeLLVMModuleReturnTuple(Module *exitedMod = nullptr) {
+  Module *mod =
+      exitedMod == nullptr ? new Module("test", llvmContext) : exitedMod;
+
+  auto sty = StructType::create(llvmContext, "tuple_type");
+  auto types = std::vector<Type *>{Type::getFloatTy(llvmContext),
+                                   Type::getFloatTy(llvmContext)};
+  sty->setBody(types);
+
+  Constant *c = mod->getOrInsertFunction("passTuple",
+                                         /* return type*/
+                                         sty,
+                                         /* args */
+                                         Type::getFloatTy(llvmContext),
+                                         Type::getFloatTy(llvmContext));
+  Function *passTuple = cast<Function>(c);
+  passTuple->setCallingConv(CallingConv::C);
+
+  Function::arg_iterator args = passTuple->arg_begin();
+  Value *e0 = args++;
+  e0->setName("e0");
+  Value *e1 = args++;
+  e1->setName("e1");
+
+  BasicBlock *entry = BasicBlock::Create(llvmContext, "entry", passTuple);
+  IRBuilder<> builder(entry);
+  builder.CreateAggregateRet(&e0, 2);
+
+  return mod;
+}
+
 int main() {
   Module *mod = makeLLVMModuleMulAdd();
   mod = makeLLVMModuleGCD(mod);
+  mod = makeLLVMModuleReturnTuple(mod);
   verifyModule(*mod);
 
   legacy::PassManager PM;
